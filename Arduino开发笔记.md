@@ -393,6 +393,78 @@ analogWrite(pin,value)
 
 ## 开发案例
 
+### Blink
+
+### 舵机
+
+
+
+#### 接线
+
+舵机信号线连接到Arduino Uno R3 主板的 7 脚,烧录程序之后，在串口监视器中输入要调整舵机的角度，让舵机转到相应角度的位置
+
+<img src="./Arduino开发笔记.assets/image-20241007234751703.png" alt="image-20241007234751703" style="zoom:67%;" />
+
+<img src="./Arduino开发笔记.assets/image-20241007234813310.png" alt="image-20241007234813310" style="zoom:67%;" />
+
+#### 程序
+
+不使用伺服电机库函数
+
+```c
+int servopin = 7;
+// 定义函数
+void servopulse(int angle) {
+  int pulsewidth = (angle * 11) + 500;
+  digitalWrite(servopin, HIGH);
+  delayMicroseconds(pulsewidth);
+  digitalWrite(servopin, LOW);
+  delayMicroseconds(20000 - pulsewidth);
+}
+void setup() {
+  pinMode(servopin, OUTPUT);
+}
+void loop() {
+  for (int angle = 0; angle < 180; angle += 2) {
+    for (int i = 0; i < 10; i++) {
+      servopulse(angle);
+    }
+  }
+  for (int angle = 180; angle > 0; angle -= 2) {
+    for (int i = 0; i < 10; i++) {
+      servopulse(angle);
+    }
+  }
+}
+```
+
+使用伺服电机库函数
+
+```c
+#include <Servo.h>
+Servo myservo;  // 定义舵机对象，最多八个
+int pos = 0;    // 定义舵机转动位置
+void setup() {
+  myservo.attach(7);  // 设置舵机控制针脚
+}
+void loop() {
+  // 0到180旋转舵机，每次延时15毫秒
+  for (pos = 0; pos < 180; pos += 1) {
+    myservo.write(pos);
+    delay(15);
+  }
+  // 180到0旋转舵机，每次延时15毫秒
+  for (pos = 180; pos >= 1; pos -= 1) {
+    myservo.write(pos);
+    delay(15);
+  }
+}
+```
+
+
+
+
+
 ## 附录
 
 ### C\C++语言基础
