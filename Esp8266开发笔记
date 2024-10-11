@@ -1,4 +1,134 @@
+## NodeMCU开发板详解
 
+### 数字输入输出引脚（GPIO）
+
+如下图所示，ESP8266芯片四周分布很多引脚。这些引脚大部分可用作输入输出使用。这些用作输入输出的引脚统称为GPIO。
+
+<img src="./Esp8266开发笔记.assets/image-20241011205504363.png" alt="image-20241011205504363" style="zoom:50%;" />
+
+ESP8266芯片的GPIO引脚可用作数字输入来读取引脚电平，也可用作数字输出向外围电路发出控制信号。在这一点上，GPIO引脚与Arduino开发板的引脚功能十分类似。（请注意，我在这里用的是类似而不是相同。因为GPIO引脚与Arduino开发板引脚还是存在着很多不同的。）
+
+当引脚以数字输出模式工作时，低电平是0V (灌电流)，高电平是3.3V (拉电流)。
+
+> 注意:ESP8266芯片与Arduino Uno/Nano等开发板的引脚电平电压有所区别。Arduino开发板的高电平是+5V，低电平是0V。
+
+### GPIO编号与NodeMCU开发板引脚名的区别
+
+在很多介绍ESP8266以及NodeMCU的资料里会出现两种引脚命名方法。一种是GPIO编号，一种是NodeMCU引脚名。请注意这两者是不同的，请千万不要混淆。
+
+GPIO编号指的是ESP8266芯片的引脚编号。
+
+而NodeMCU引脚名指的是电路板上印刷的引脚名称。如下图所示
+
+<img src="./Esp8266开发笔记.assets/image-20241011205747628.png" alt="image-20241011205747628" style="zoom:50%;" />
+
+本笔记中“GPIO编号”这一名称指代的是ESP8266芯片的引脚编号。我们会以“GPIO + 数字”这一格式来指代，如GPIO2, GPIO16…
+
+NodeMCU开发板的引脚名指的是开发板上印刷的文字。通常这些引脚名都是一个字符接一个数字的组合，如：D0、D1、A0… 我们会用“开发板引脚”或直接使用“引脚”来表示它们。
+
+简而言之，只要您看到GPIO这几个字母，就说明是芯片引脚，而没有GPIO这几个字母，那肯定是指开发板引脚。
+
+### ESP8266 GPIO编号与NodeMCU开发板引脚名的对应关系
+
+ESP8266芯片的GPIO与开发板的引脚是连在一起的。但是GPIO与开发板引脚又是如何相互连接的呢？这个问题的答案就在下面的说明图中。
+
+<img src="./Esp8266开发笔记.assets/image-20241011210001942.png" alt="image-20241011210001942" style="zoom: 67%;" />
+
+在以上图片中深蓝底白色字的标识就是GPIO引脚编号。如“![image-20241011210217484](./Esp8266开发笔记.assets/image-20241011210217484.png)”。而开发板上所印刷的D2,D3等等就是NodeMCU开发板引脚名称。如下图所示。
+
+<img src="./Esp8266开发笔记.assets/image-20241011210148249.png" alt="image-20241011210148249" style="zoom:67%;" />
+
+NodeMCU的D2引脚是与GPIO4相互连接的。以此类推，通过以上说明图就可以找到D2与GPIO的对应关系了。
+
+那么，我们为什么要花这么多时间讲解开发板引脚名和GPIO号的对应关系呢？将来我们在编写NodeMCU开发板的控制程序时，经常会进行引脚操作。如以下程序语句
+
+```c
+digitalQrite(4, HIGH);
+```
+
+以上语句通过digitalWrite函数将引脚4设置为高电平。那么您知道这个数字4到底是指GPIO4还是指开发板D4引脚呢？
+
+答案是GPIO4而不是D4。也就是D2。
+
+如果要对D4引脚设置为高电平，您可以使用以下语句。
+
+```c
+digitalQrite(D4, HIGH);
+```
+
+### 可用引脚
+
+ESP8266芯片有17个GPIO引脚（GPIO0～GPIO16）。这些引脚中的GPIO6～GPIO 11被用于连接开发板的闪存（Flash Memory）。如果在实验电路中使用GPIO6～GPIO11，NodeMCU开发板将无法正常工作。因此建议不要使用GPIO6～GPIO 11。
+
+<img src="./Esp8266开发笔记.assets/image-20241011211309335.png" alt="image-20241011211309335" style="zoom:67%;" />
+
+### 电压电流限制
+
+NodeMCU开发板引脚的输入输出电压限制是3.3 V。如果向引脚施加3.6V以上的电压就有可能对芯片电路造成损坏。同时请注意，这些引脚的最大输出电流是12mA。
+
+由于NodeMCU开发板的引脚允许电压和电流都是低于Arduino开发板的引脚，所以如您想要将NodeMCU与Arduino引脚相互连接，请特别注意这两个开发板的引脚电压和电流的区别。如果操作不当可能会损坏NodeMCU开发板。
+
+### 特殊引脚情况说明
+
+GPIO2引脚 在NodeMCU开发板启动时是不能连接低电平的。
+
+GPIO15引脚在开发板运行中一直保持低电平状态。因此请不要使用GPIO15引脚来读取开关状态或进行I²C通讯。
+
+GPIO0引脚在开发板运行中需要一直保持高电平状态。否则ESP8266将进入程序上传工作模式也就无法正常工作了。您无需对GPIO0引脚进行额外操作，因为NodeMCU的内置电路可以确保GPIO0引脚在工作时连接高电平而在上传程序时连接低电平。
+
+### 上拉电阻/下拉电阻
+
+GPIO 0-15引脚都配有内置上拉电阻。这一点与Arduino十分类似。GPIO16 引脚配有内置下拉电阻。
+
+### 模拟输入
+
+ESP8266 只有一个模拟输入引脚（该引脚通过模拟-数字转换将引脚上的模拟电压数值转化为数字量）。此引脚可以读取的模拟电压值为 0 – 1.0V。请注意：ESP8266 芯片模拟输入引脚连接在1.0V以上电压可能损坏ESP8266芯片。
+
+以上所描述的是针对ESP8266芯片的引脚。而对于NodeMCU开发板引脚，情况就不同了。
+
+NodeMCU开发板配有降压电路。您可以用NodeMCU开发板的模拟输入引脚读取0-3.3V的模拟电压信号。
+
+### 通讯
+
+**串行端口**
+
+ESP8266有2个硬件串行端口（UART）。
+
+串行端口0（UART0）使用GPIO1和GPIO3引脚。其中GPIO1引脚是TX0，GPIO3是RX0。
+
+串行端口1（UART1）使用GPIO2和GPIO8引脚。其中GPIO2引脚是TX1，GPIO8是RX1。请注意，由于GPIO8被用于连接闪存芯片，串行端口1只能使用GPIO2来向外发送串行数据。
+
+**I²C**
+ESP8266只有软件模拟的I²C端口，没有硬件I²C端口。也就是说我们可以使用任意的两个GPIO引脚通过软件模拟来实现I²C通讯。ESP8266的数据表（datasheet）中，GPIO2标注为SDA，GPIO14标注为SCL。
+
+**SPI**
+ESP8266的SPI端口情况如下：
+
+GPIO14 — CLK
+GPIO12 — MISO
+GPIO13 — MOSI
+GPIO 15 — CS(SS)
+
+**ESP8266引脚功能一览**
+
+| GPIO   | 功能             | 状态 | 限制                                               |
+| :----- | :--------------- | :--- | :------------------------------------------------- |
+| 0      | 引导模式选择     | 3.3V | 无Hi-Z                                             |
+| 1      | TX0              | –    | 串口通讯过程中不能使用                             |
+| 2      | 引导模式选择 TX1 | 3.3V | 启动时不能接地 启动时发送调试信息                  |
+| 3      | RX0              | –    | 串口通讯过程中不能使用                             |
+| 4      | SDA (I²C)        | –    | –                                                  |
+| 5      | SCL (I²C)        | –    | –                                                  |
+| 6 – 11 | 连接闪存         | x    | 不可用                                             |
+| 12     | MISO (SPI)       | –    | –                                                  |
+| 13     | MOSI (SPI)       | –    | –                                                  |
+| 14     | SCK (SPI)        | –    | –                                                  |
+| 15     | SS (SPI)         | 0V   | 上拉电阻不可用                                     |
+| 16     | 睡眠唤醒         | –    | 无上拉电阻，仅有下拉电阻 连接 RST 引脚实现睡眠唤醒 |
+
+
+
+## 物联网开发
 
 ### 接入点模式（Access Point 即 AP）
 
@@ -196,38 +326,121 @@ void setup(void){
   }                                          // 一旦连接WiFI成功，wifiMulti.run()将会返回“WL_CONNECTED”。这也是
                                              // 此处while循环判断是否跳出循环的条件。
  
-  // WiFi连接成功后将通过串口监视器输出连接成功信息 
-  Serial.println('\n');                     // WiFi连接成功后
-  Serial.print("Connected to ");            // NodeMCU将通过串口监视器输出。
-  Serial.println(WiFi.SSID());              // 连接的WiFI名称
-  Serial.print("IP address:\t");            // 以及
-  Serial.println(WiFi.localIP());           // NodeMCU的IP地址
-  
-//--------"启动网络服务功能"程序部分开始-------- //  此部分为程序为本示例程序重点1
-  esp8266_server.begin();                   //  详细讲解请参见太极创客网站《零基础入门学用物联网》
-  esp8266_server.on("/", handleRoot);       //  第3章-第2节 ESP8266-NodeMCU网络服务器-1
-  esp8266_server.onNotFound(handleNotFound);        
-//--------"启动网络服务功能"程序部分结束--------
-  Serial.println("HTTP esp8266_server started");//  告知用户ESP8266网络服务功能已经启动
+    // WiFi连接成功后将通过串口监视器输出连接成功信息 
+    Serial.println('\n');                     // WiFi连接成功后
+    Serial.print("Connected to ");            // NodeMCU将通过串口监视器输出。
+    Serial.println(WiFi.SSID());              // 连接的WiFI名称
+    Serial.print("IP address:\t");            // 以及
+    Serial.println(WiFi.localIP());           // NodeMCU的IP地址
+
+    //--------"启动网络服务功能"程序部分开始-------- //  此部分为程序为本示例程序重点1
+    esp8266_server.begin();                   //  详细讲解请参见太极创客网站《零基础入门学用物联网》
+    esp8266_server.on("/", handleRoot);       //  第3章-第2节 ESP8266-NodeMCU网络服务器-1
+    esp8266_server.onNotFound(handleNotFound);        
+    //--------"启动网络服务功能"程序部分结束--------
+    Serial.println("HTTP esp8266_server started");//  告知用户ESP8266网络服务功能已经启动
 }
- 
-/* 以下函数语句为本示例程序重点3
-详细讲解请参见太极创客网站《零基础入门学用物联网》
-第3章-第2节 3_2_1_First_Web_Server 的说明讲解*/  
+
 void loop(void){
-  esp8266_server.handleClient();     // 处理http服务器访问
+    // 假设请求为test?float=2.5&int=2&buttonValue=20。可以通过下面代码获取参数
+    // float floatValue = server.arg("float").toFloat();  // 获取客户端发送HTTP信息中的浮点数值
+    // int intValue = server.arg("int").toInt();        // 获取客户端发送HTTP信息中的整数数值
+    // int buttonValue = server.arg("button").toInt();  // 获取客户端发送HTTP信息中的按键控制量
+    esp8266_server.handleClient();     // 处理http服务器访问
 }
  
-/* 以下两个函数为本示例程序重点2
-详细讲解请参见太极创客网站《零基础入门学用物联网》
-第3章-第2节 3_2_1_First_Web_Server 的说明讲解*/                                                                            
 void handleRoot() {   //处理网站根目录“/”的访问请求 
-  esp8266_server.send(200, "text/plain", "Hello from ESP8266");   // NodeMCU将调用此函数。
+  	esp8266_server.send(200, "text/plain", "Hello from ESP8266");   // NodeMCU将调用此函数。
 }
  
 // 设置处理404情况的函数'handleNotFound'
 void handleNotFound(){                                        // 当浏览器请求的网络资源无法在服务器找到时，
-  esp8266_server.send(404, "text/plain", "404: Not found");   // NodeMCU将调用此函数。
+  	esp8266_server.send(404, "text/plain", "404: Not found");   // NodeMCU将调用此函数。
 }
+```
+
+通过访问`ip/`即可得到开发板服务的响应。
+
+### 使用http请求接口
+
+```c
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>   // 使用WiFiMulti库
+ 
+#define buttonPin D3            // 按钮引脚D3
+ 
+ESP8266WiFiMulti wifiMulti;     // 建立ESP8266WiFiMulti对象,对象名称是 'wifiMulti'
+ 
+bool buttonState;       //存储客户端按键控制数据
+float clientFloatValue; //存储客户端发送的浮点型测试数据
+int clientIntValue;     //存储客户端发送的整数型测试数据
+ 
+const char* host = "www.baidu.com";    // 即将连接服务器网址/IP
+const int httpPort = 80;               // 即将连接服务器端口
+ 
+void setup(void){
+  Serial.begin(9600);                  // 启动串口通讯
+  Serial.println("");
+ 
+  pinMode(buttonPin, INPUT_PULLUP);    // 将按键引脚设置为输入上拉模式
+  
+  wifiMulti.addAP("ThunderGod", "5201314"); // 将需要连接的一系列WiFi ID和密码输入这里
+  Serial.println("Connecting ...");                            // 则尝试使用此处存储的密码进行连接。
+  
+  while (wifiMulti.run() != WL_CONNECTED) { // 尝试进行wifi连接。
+    delay(250);
+    Serial.print('.');
+  }
+ 
+  // WiFi连接成功后将通过串口监视器输出连接成功信息 
+  Serial.println('\n');
+  Serial.print("Connected to ");
+  Serial.println(WiFi.SSID());              // 通过串口监视器输出连接的WiFi名称
+  Serial.print("IP address:\t");
+  Serial.println(WiFi.localIP());           // 通过串口监视器输出ESP8266-NodeMCU的IP
+}
+ 
+void loop(void){
+ // 发送请求
+ wifiClientRequest();
+ delay(1000);
+}
+ 
+void wifiClientRequest(){
+  WiFiClient client;  
+ 
+  // 将需要发送的数据信息放入客户端请求,可以加入参数
+  String url = "/";
+                         
+  // 建立字符串，用于HTTP请求
+  String httpRequest =  String("GET ") + url + " HTTP/1.1\r\n" +
+                        "Host: " + host + "\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n";
+                        
+  Serial.print("Connecting to "); 
+  Serial.print(host); 
+  
+  if (client.connect(host, httpPort)) {  //如果连接失败则串口输出信息告知用户然后返回loop
+    Serial.println(" Success");
+    
+    client.print(httpRequest);          // 向服务器发送HTTP请求
+    Serial.println("Sending request: ");// 通过串口输出HTTP请求信息内容以便查阅
+    Serial.println(httpRequest);
+
+    // 读取服务器返回的响应
+    while (client.connected() || client.available()) { // 如果客户端保持连接或者有数据可读
+      if (client.available()) {  // 如果有可读的数据
+        String line = client.readStringUntil('\n');  // 读取一行数据
+        Serial.println(line);    // 打印服务器响应内容
+      }
+    }
+  } else {
+    Serial.println(" Connection failed");
+  }
+  
+  client.stop();                         
+}
+
 ```
 
