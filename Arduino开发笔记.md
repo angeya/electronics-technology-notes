@@ -463,6 +463,61 @@ void loop() {
 
 
 
+### 连接Esp8266
+
+因为Arduino UNO无法连接网络，所以想要实现物联网还得接入ESP8266 等Wifi模块。Arduino UNO 开发板可以和 ESP8266 Node MCU开发板使用串口进行通信。
+
+连线如下：
+
+将 ESP8266 和 Arduino Uno 的 `TX` 和 `RX` 引脚交叉连接，并连接共同的地线（GND）。
+
+| Arduino Uno                        | ESP8266 Node MCU                        |      |
+| ---------------------------------- | --------------------------------------- | ---- |
+| RX                                 | TX                                      |      |
+| TX                                 | RX                                      |      |
+| GND                                | GND                                     |      |
+| 3.3V（理论上可行但是实际中未生效） | Vin（Arduino 无法供电的话使用独立电源） |      |
+
+> **注意：**当烧录代码的时候，最好断开两个开发板的串口接线，否则可能会导致代码烧录失败。
+
+ESP8266串口输出数据，Arduino 读取串口数据。代码很简单，串口输出的数据，在Arduino IDE的串口监视器也能看到。
+
+```c
+// =====  ESP8266 代码 =====
+void setup() {
+  Serial.begin(9600);         // 启动串口监视器
+}
+
+void loop() {
+  // 定期发送数据到 Arduino
+  Serial.println("Hello from ESP8266!");
+  delay(500);  // 每隔1秒发送一次
+}
+
+// ============================================ 分割线 ====================================================
+
+// =====  Arduino 代码 =====
+void setup() {
+  Serial.begin(9600); // 启动串口监视器
+  Serial.println("Arduino Ready to Receive");
+}
+
+void loop() {
+  // 如果有数据可读
+  if (Serial.available() > 0) {
+    String receivedData = Serial.readStringUntil('\n'); // 读取串行数据
+    Serial.print("Received: ");
+    Serial.println(receivedData); // 打印接收到的数据
+  }
+  delay(100);
+}
+
+```
+
+上面是ESP8266往Arduino上传数据，反过来也是一样的，代码很简单。不过需要注意的是，上面的代码 `Serial.available() > 0` 判断是否有数据，如果时机恰巧，可能打印出来的数据是不完整的，因为底层数据传输是串行的。
+
+> **温馨提示：**如果ESP8266和Arduino之间需要互相通信，使用串口打印数据的时候最好加一些额外的判断，否则会导致一些无用的串口数据传输，更可能会导致数据无尽地来回传输。
+
 
 
 ## 附录
