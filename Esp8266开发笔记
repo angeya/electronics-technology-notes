@@ -472,7 +472,7 @@ void wifiClientRequest(){
 #include <ESP8266WiFi.h>
 
 const char* ssid = "ThunderGod";       // WiFi名称
-const char* password = "5201314asdk";  // WiFi密码
+const char* password = "5201314";  // WiFi密码
 const char* websockets_server_host = "192.168.31.123";  // WebSocket 服务器地址
 const uint16_t websockets_server_port = 8080; // WebSocket 服务端口
 
